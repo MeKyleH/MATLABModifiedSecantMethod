@@ -1,0 +1,75 @@
+% modified_secant.m
+% Author: Kyle Holt
+% Date: 9/23/13
+% 
+% Objective: To determine the angle that a ball must be thrown to be caught
+% by a receiver
+% 
+% Equations used: f(x) = x*tan(theta) -
+% ((distance^2*g)/(2*v_0^2*cos^2(theta))) + h_1 - y = 0
+% 
+
+% clears workspace
+clear
+clc
+
+
+% initializes known values
+h_1 = 6; % ft
+y = 7; % ft
+x = 60; % ft
+g = 32.2; %ft/sec^2
+v_0 = 50; % ft/sec
+
+% creates one array for all known values
+param = [h_1, y, x, g, v_0];
+
+% creates stopping criteria
+tolerable_error = 0.0001;
+max_iteration = 100;
+
+% creates stopping criteria starting values
+iteration = 0;
+error_percent = 100;
+
+% initial calculations
+theta = pi/4; % radians
+
+% calcalates second value of theta using Newton-Raphson Method since two
+% guesses are needed for Secant method
+theta_old = theta;
+[f_theta_old, df_theta_old] = outside_newton_raphson (param, theta);
+theta = theta - (f_theta_old/df_theta_old);
+
+% creates loop to run calculations the number of times required to find a
+% root within the stopping criteria
+while tolerable_error <= error_percent && iteration <= max_iteration
+    
+    iteration = iteration +1;
+      
+    % calculates values of F(x) and F'(x) with the given theta
+    [f_theta, df_theta] = outside_newton_raphson (param, theta);
+    
+    % calculates the value of theta for the next iteration
+    theta = theta - (f_theta*(theta_old - theta))/(f_theta_old - f_theta);
+    
+    % calculates the error percent
+    error_percent = 100 * (theta - theta_old)/theta;    
+    
+    % creates place holder for theta to be used with error percent
+    theta_old = theta;
+    f_theta_old = f_theta;
+    df_theta_old = df_theta;
+    
+end
+
+% outputs final information
+disp(['Theta root value = ',num2str(theta)]);
+disp(['Final Error Percent = ',num2str(error_percent)]);
+disp(['Number of iterations = ',num2str(iteration)]);  
+disp(['F(theta) final = ',num2str(f_theta)]);  
+
+% double checks answer via built in fzero command
+fun = y - (x*tan(theta) - ((x^2*g)/(2*v_0^2*cos(theta)^2)) + h_1); % function
+x0 = pi/4; % initial point
+x = fzero(fun,x0);
